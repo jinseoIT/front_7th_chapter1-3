@@ -1,3 +1,4 @@
+import { DndContext, DragOverlay } from '@dnd-kit/core';
 import {
   ChevronLeft,
   ChevronRight,
@@ -35,7 +36,9 @@ import { useState } from 'react';
 import MonthView from './components/MonthView.tsx';
 import RecurringEventDialog from './components/RecurringEventDialog.tsx';
 import WeekView from './components/WeekView.tsx';
+import { eventBoxStyles } from './constants/eventBoxStyles.ts';
 import { useCalendarView } from './hooks/useCalendarView.ts';
+import { useDnd } from './hooks/useDnd.tsx';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
@@ -240,6 +243,19 @@ function App() {
     resetForm();
   };
 
+  const {
+    sensors,
+    activeEvent,
+    overId,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDragCancel,
+  } = useDnd(events, saveEvent, (overlapping, updatedEvent) => {
+    setOverlappingEvents(overlapping);
+    setIsOverlapDialogOpen(true);
+  });
+
   return (
     <Box sx={{ width: '100%', height: '100vh', margin: 'auto', p: 5 }}>
       <Stack direction="row" spacing={6} sx={{ height: '100%' }}>
@@ -434,47 +450,92 @@ function App() {
             {editingEvent ? '일정 수정' : '일정 추가'}
           </Button>
         </Stack>
-
         <Stack flex={1} spacing={5}>
-          <Typography variant="h4">일정 보기</Typography>
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragCancel={handleDragCancel}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <Typography variant="h4">일정 보기</Typography>
 
-          <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
-            <IconButton aria-label="Previous" onClick={() => navigate('prev')}>
-              <ChevronLeft />
-            </IconButton>
-            <Select
-              size="small"
-              aria-label="뷰 타입 선택"
-              value={view}
-              onChange={(e) => setView(e.target.value as 'week' | 'month')}
-            >
-              <MenuItem value="week" aria-label="week-option">
-                Week
-              </MenuItem>
-              <MenuItem value="month" aria-label="month-option">
-                Month
-              </MenuItem>
-            </Select>
-            <IconButton aria-label="Next" onClick={() => navigate('next')}>
-              <ChevronRight />
-            </IconButton>
-          </Stack>
+            <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
+              <IconButton aria-label="Previous" onClick={() => navigate('prev')}>
+                <ChevronLeft />
+              </IconButton>
+              <Select
+                size="small"
+                aria-label="뷰 타입 선택"
+                value={view}
+                onChange={(e) => setView(e.target.value as 'week' | 'month')}
+              >
+                <MenuItem value="week" aria-label="week-option">
+                  Week
+                </MenuItem>
+                <MenuItem value="month" aria-label="month-option">
+                  Month
+                </MenuItem>
+              </Select>
+              <IconButton aria-label="Next" onClick={() => navigate('next')}>
+                <ChevronRight />
+              </IconButton>
+            </Stack>
 
-          {view === 'week' && (
-            <WeekView
-              currentDate={currentDate}
-              filteredEvents={filteredEvents}
-              notifiedEvents={notifiedEvents}
-            />
-          )}
-          {view === 'month' && (
-            <MonthView
-              currentDate={currentDate}
-              filteredEvents={filteredEvents}
-              notifiedEvents={notifiedEvents}
-              holidays={holidays}
-            />
-          )}
+            {view === 'week' && (
+              <WeekView
+                currentDate={currentDate}
+                filteredEvents={filteredEvents}
+                notifiedEvents={notifiedEvents}
+                overId={overId}
+              />
+            )}
+            {view === 'month' && (
+              <MonthView
+                currentDate={currentDate}
+                filteredEvents={filteredEvents}
+                notifiedEvents={notifiedEvents}
+                holidays={holidays}
+              />
+            )}
+            <DragOverlay dropAnimation={null}>
+              {activeEvent ? (
+                <Box
+                  sx={{
+                    ...eventBoxStyles.common,
+                    ...(notifiedEvents.includes(activeEvent.id)
+                      ? eventBoxStyles.notified
+                      : eventBoxStyles.normal),
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+                    cursor: 'grabbing', // 드래그 중 커서
+                    opacity: 1,
+                  }}
+                >
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    {notifiedEvents.includes(activeEvent.id) && <Notifications fontSize="small" />}
+                    {activeEvent.repeat.type !== 'none' && (
+                      <Tooltip
+                        title={`${activeEvent.repeat.interval}${getRepeatTypeLabel(
+                          activeEvent.repeat.type
+                        )}마다 반복${
+                          activeEvent.repeat.endDate ? ` (종료: ${activeEvent.repeat.endDate})` : ''
+                        }`}
+                      >
+                        <Repeat fontSize="small" />
+                      </Tooltip>
+                    )}
+                    <Typography
+                      variant="caption"
+                      noWrap
+                      sx={{ fontSize: '0.75rem', lineHeight: 1.2 }}
+                    >
+                      {activeEvent.title}
+                    </Typography>
+                  </Stack>
+                </Box>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         </Stack>
 
         <Stack

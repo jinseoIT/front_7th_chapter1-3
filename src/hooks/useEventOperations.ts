@@ -37,10 +37,10 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  const saveEvent = async (eventData: Event | EventForm) => {
+  const saveEvent = async (eventData: Event | EventForm, isEdit: boolean = false) => {
     try {
       let response;
-      if (editing) {
+      if (editing || isEdit) {
         const editingEvent = {
           ...eventData,
           // ! TEST CASE

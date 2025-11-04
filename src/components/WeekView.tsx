@@ -1,6 +1,5 @@
 import { Notifications, Repeat } from '@mui/icons-material';
 import {
-  Box,
   Stack,
   Table,
   TableBody,
@@ -12,19 +11,22 @@ import {
   Typography,
 } from '@mui/material';
 
+import DroppabelBox from './DroppabelBox';
 import { weekDays } from '../constants/date';
 import { eventBoxStyles } from '../constants/eventBoxStyles';
 import { Event } from '../types';
-import { formatWeek, getWeekDates } from '../utils/dateUtils';
+import DroppabelDateCell from './DroppabelDateCell';
+import { formatDate, formatWeek, getWeekDates } from '../utils/dateUtils';
 import { getRepeatTypeLabel } from '../utils/getRepeatTypeLabel';
 
 type Props = {
   currentDate: Date;
   filteredEvents: Event[];
   notifiedEvents: string[];
+  overId: string | null;
 };
 
-const WeekView = ({ currentDate, filteredEvents, notifiedEvents }: Props) => {
+const WeekView = ({ currentDate, filteredEvents, notifiedEvents, overId }: Props) => {
   const weekDates = getWeekDates(currentDate);
   return (
     <Stack data-testid="week-view" spacing={4} sx={{ width: '100%' }}>
@@ -43,8 +45,10 @@ const WeekView = ({ currentDate, filteredEvents, notifiedEvents }: Props) => {
           <TableBody>
             <TableRow>
               {weekDates.map((date) => (
-                <TableCell
-                  key={date.toISOString()}
+                <DroppabelDateCell
+                  key={formatDate(date, date.getDate())}
+                  id={formatDate(date, date.getDate())}
+                  overId={overId}
                   sx={{
                     height: '120px',
                     verticalAlign: 'top',
@@ -64,8 +68,9 @@ const WeekView = ({ currentDate, filteredEvents, notifiedEvents }: Props) => {
                       const isRepeating = event.repeat.type !== 'none';
 
                       return (
-                        <Box
+                        <DroppabelBox
                           key={event.id}
+                          eventId={event.id}
                           sx={{
                             ...eventBoxStyles.common,
                             ...(isNotified ? eventBoxStyles.notified : eventBoxStyles.normal),
@@ -93,10 +98,10 @@ const WeekView = ({ currentDate, filteredEvents, notifiedEvents }: Props) => {
                               {event.title}
                             </Typography>
                           </Stack>
-                        </Box>
+                        </DroppabelBox>
                       );
                     })}
-                </TableCell>
+                </DroppabelDateCell>
               ))}
             </TableRow>
           </TableBody>
