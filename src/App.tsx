@@ -251,7 +251,7 @@ function App() {
     handleDragEnd,
     handleDragOver,
     handleDragCancel,
-  } = useDnd(events, saveEvent, (overlapping, updatedEvent) => {
+  } = useDnd(events, saveEvent, (overlapping) => {
     setOverlappingEvents(overlapping);
     setIsOverlapDialogOpen(true);
   });
@@ -496,6 +496,7 @@ function App() {
                 filteredEvents={filteredEvents}
                 notifiedEvents={notifiedEvents}
                 holidays={holidays}
+                overId={overId}
               />
             )}
             <DragOverlay dropAnimation={null}>
