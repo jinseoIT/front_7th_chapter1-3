@@ -1,6 +1,5 @@
 import { Notifications, Repeat } from '@mui/icons-material';
 import {
-  Box,
   Stack,
   Table,
   TableBody,
@@ -14,6 +13,8 @@ import {
 
 import { weekDays } from '../constants/date';
 import { Event } from '../types';
+import DroppabelBox from './DroppabelBox';
+import DroppabelDateCell from './DroppabelDateCell';
 import { formatDate, formatMonth, getEventsForDay, getWeeksAtMonth } from '../utils/dateUtils';
 import { getRepeatTypeLabel } from '../utils/getRepeatTypeLabel';
 
@@ -24,9 +25,10 @@ type Props = {
   holidays: {
     [key: string]: string;
   };
+  overId: string | null;
 };
 
-const MonthView = ({ currentDate, filteredEvents, notifiedEvents, holidays }: Props) => {
+const MonthView = ({ currentDate, filteredEvents, notifiedEvents, holidays, overId }: Props) => {
   const weeks = getWeeksAtMonth(currentDate);
   return (
     <Stack data-testid="month-view" spacing={4} sx={{ width: '100%' }}>
@@ -45,13 +47,15 @@ const MonthView = ({ currentDate, filteredEvents, notifiedEvents, holidays }: Pr
           <TableBody>
             {weeks.map((week, weekIndex) => (
               <TableRow key={weekIndex}>
-                {week.map((day, dayIndex) => {
+                {week.map((day) => {
                   const dateString = day ? formatDate(currentDate, day) : '';
                   const holiday = holidays[dateString];
 
                   return (
-                    <TableCell
-                      key={dayIndex}
+                    <DroppabelDateCell
+                      id={dateString}
+                      overId={overId}
+                      key={dateString}
                       sx={{
                         height: '120px',
                         verticalAlign: 'top',
@@ -77,8 +81,9 @@ const MonthView = ({ currentDate, filteredEvents, notifiedEvents, holidays }: Pr
                             const isRepeating = event.repeat.type !== 'none';
 
                             return (
-                              <Box
+                              <DroppabelBox
                                 key={event.id}
+                                eventId={event.id}
                                 sx={{
                                   p: 0.5,
                                   my: 0.5,
@@ -115,12 +120,12 @@ const MonthView = ({ currentDate, filteredEvents, notifiedEvents, holidays }: Pr
                                     {event.title}
                                   </Typography>
                                 </Stack>
-                              </Box>
+                              </DroppabelBox>
                             );
                           })}
                         </>
                       )}
-                    </TableCell>
+                    </DroppabelDateCell>
                   );
                 })}
               </TableRow>
