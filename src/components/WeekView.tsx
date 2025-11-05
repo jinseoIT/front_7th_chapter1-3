@@ -24,9 +24,10 @@ type Props = {
   filteredEvents: Event[];
   notifiedEvents: string[];
   overId: string | null;
+  onClickCell: (date: Date) => void;
 };
 
-const WeekView = ({ currentDate, filteredEvents, notifiedEvents, overId }: Props) => {
+const WeekView = ({ currentDate, filteredEvents, notifiedEvents, overId, onClickCell }: Props) => {
   const weekDates = getWeekDates(currentDate);
   return (
     <Stack data-testid="week-view" spacing={4} sx={{ width: '100%' }}>
@@ -57,6 +58,7 @@ const WeekView = ({ currentDate, filteredEvents, notifiedEvents, overId }: Props
                     border: '1px solid #e0e0e0',
                     overflow: 'hidden',
                   }}
+                  onClickCell={() => onClickCell(date)}
                 >
                   <Typography variant="body2" fontWeight="bold">
                     {date.getDate()}

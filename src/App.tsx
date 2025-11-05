@@ -41,6 +41,7 @@ import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useDnd } from './hooks/useDnd.tsx';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
+import { useFormDate } from './hooks/useFormDate.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useRecurringEventOperations } from './hooks/useRecurringEventOperations.ts';
 import { useSearch } from './hooks/useSearch.ts';
@@ -255,6 +256,8 @@ function App() {
     setOverlappingEvents(overlapping);
     setIsOverlapDialogOpen(true);
   });
+
+  const { handleSelectDate } = useFormDate(setDate);
 
   return (
     <Box sx={{ width: '100%', height: '100vh', margin: 'auto', p: 5 }}>
@@ -488,6 +491,7 @@ function App() {
                 filteredEvents={filteredEvents}
                 notifiedEvents={notifiedEvents}
                 overId={overId}
+                onClickCell={handleSelectDate}
               />
             )}
             {view === 'month' && (
@@ -497,6 +501,7 @@ function App() {
                 notifiedEvents={notifiedEvents}
                 holidays={holidays}
                 overId={overId}
+                onClickCell={handleSelectDate}
               />
             )}
             <DragOverlay dropAnimation={null}>

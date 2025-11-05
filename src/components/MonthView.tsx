@@ -26,10 +26,19 @@ type Props = {
     [key: string]: string;
   };
   overId: string | null;
+  onClickCell: (date: Date | string) => void;
 };
 
-const MonthView = ({ currentDate, filteredEvents, notifiedEvents, holidays, overId }: Props) => {
+const MonthView = ({
+  currentDate,
+  filteredEvents,
+  notifiedEvents,
+  holidays,
+  overId,
+  onClickCell,
+}: Props) => {
   const weeks = getWeeksAtMonth(currentDate);
+  console.log('weeks ::', weeks);
   return (
     <Stack data-testid="month-view" spacing={4} sx={{ width: '100%' }}>
       <Typography variant="h5">{formatMonth(currentDate)}</Typography>
@@ -47,7 +56,7 @@ const MonthView = ({ currentDate, filteredEvents, notifiedEvents, holidays, over
           <TableBody>
             {weeks.map((week, weekIndex) => (
               <TableRow key={weekIndex}>
-                {week.map((day) => {
+                {week.map((day, dateIndex) => {
                   const dateString = day ? formatDate(currentDate, day) : '';
                   const holiday = holidays[dateString];
 
@@ -55,7 +64,7 @@ const MonthView = ({ currentDate, filteredEvents, notifiedEvents, holidays, over
                     <DroppabelDateCell
                       id={dateString}
                       overId={overId}
-                      key={dateString}
+                      key={`${dateString}-${dateIndex}`}
                       sx={{
                         height: '120px',
                         verticalAlign: 'top',
@@ -65,6 +74,7 @@ const MonthView = ({ currentDate, filteredEvents, notifiedEvents, holidays, over
                         overflow: 'hidden',
                         position: 'relative',
                       }}
+                      onClickCell={() => onClickCell(formatDate(currentDate, Number(day)))}
                     >
                       {day && (
                         <>

@@ -8,9 +8,10 @@ type Props = {
   overId: string | null;
   children: React.ReactNode;
   sx?: SxProps<Theme>;
+  onClickCell: () => void;
 };
 
-const DroppabelDateCell = ({ id, overId, children, sx }: Props) => {
+const DroppabelDateCell = ({ id, overId, children, sx, onClickCell }: Props) => {
   const { setNodeRef, isOver } = useDroppable({ id });
   return (
     <TableCell
@@ -20,6 +21,7 @@ const DroppabelDateCell = ({ id, overId, children, sx }: Props) => {
         ...sx,
         backgroundColor: isOver || overId === id ? '#e3f2fd' : undefined, // 시각적 피드백
       }}
+      onClick={onClickCell}
     >
       {children}
     </TableCell>
