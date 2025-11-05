@@ -127,5 +127,5 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { events, fetchEvents, saveEvent, deleteEvent, createRepeatEvent };
+  return { events, setEvents, fetchEvents, saveEvent, deleteEvent, createRepeatEvent };
 };

@@ -9,16 +9,19 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 import { Event } from '../types';
 import { findOverlappingEvents } from '../utils/eventOverlap';
 
-export function useDnd(
-  events: Event[],
-  saveEvent: (event: Event, isEdit: boolean) => Promise<void>,
-  onOverlap?: (overlapping: Event[], updatedEvent: Event) => void
-) {
+type UseDndProps = {
+  events: Event[];
+  saveEvent: (event: Event, isEdit: boolean) => Promise<void>;
+  setEvents: React.Dispatch<React.SetStateAction<Event[]>>;
+  onOverlap?: (overlapping: Event[], updatedEvent: Event) => void;
+};
+
+export function useDnd({ events, saveEvent, setEvents, onOverlap }: UseDndProps) {
   // 👉 state 내부로 이동
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
@@ -61,15 +64,12 @@ export function useDnd(
         setOverId(null);
         return;
       }
-
       // 즉시 상태 초기화 (Optimistic Update)
-      setActiveEvent(null);
-      setOverId(null);
+      setEvents((prev) => prev.map((d) => (d.id === activeEvent.id ? { ...d, date: newDate } : d)));
 
       // 일정 업데이트
       await saveEvent(updatedEvent, true);
     }
-
     setActiveEvent(null);
     setOverId(null);
   };

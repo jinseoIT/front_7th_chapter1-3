@@ -94,10 +94,8 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent, createRepeatEvent, fetchEvents } = useEventOperations(
-    Boolean(editingEvent),
-    () => setEditingEvent(null)
-  );
+  const { events, setEvents, saveEvent, deleteEvent, createRepeatEvent, fetchEvents } =
+    useEventOperations(Boolean(editingEvent), () => setEditingEvent(null));
 
   const { handleRecurringEdit, handleRecurringDelete } = useRecurringEventOperations(
     events,
@@ -252,11 +250,16 @@ function App() {
     handleDragEnd,
     handleDragOver,
     handleDragCancel,
-  } = useDnd(events, saveEvent, (overlapping) => {
-    setOverlappingEvents(overlapping);
-    setIsOverlapDialogOpen(true);
+  } = useDnd({
+    events,
+    saveEvent,
+    setEvents,
+    onOverlap: (overlapping) => {
+      setOverlappingEvents(overlapping);
+      setIsOverlapDialogOpen(true);
+    },
   });
-
+  console.log('envets ::', events);
   const { handleSelectDate } = useFormDate(setDate);
 
   return (

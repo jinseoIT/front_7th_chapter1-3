@@ -38,7 +38,7 @@ const MonthView = ({
   onClickCell,
 }: Props) => {
   const weeks = getWeeksAtMonth(currentDate);
-  console.log('weeks ::', weeks);
+
   return (
     <Stack data-testid="month-view" spacing={4} sx={{ width: '100%' }}>
       <Typography variant="h5">{formatMonth(currentDate)}</Typography>
