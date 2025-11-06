@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url';
 
 import { test, expect } from '@playwright/test';
 
+import { getCurrentDate } from '../../src/utils/dateUtils';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const e2ePath = join(__dirname, '../../src/__mocks__/response/e2e.json');
@@ -18,9 +20,10 @@ test.describe.serial('일정 관리 CRUD E2E', () => {
   });
 
   test('일정 생성 - Create', async ({ page }) => {
+    const date = getCurrentDate(5);
     // 일정 추가
     await page.getByRole('textbox', { name: '제목' }).fill('테스트 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-05');
+    await page.getByRole('textbox', { name: '날짜' }).fill(date);
     await page.getByRole('textbox', { name: '시작 시간' }).fill('12:30');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('13:30');
     await page.getByRole('textbox', { name: '설명' }).fill('테스트 설명');
@@ -39,9 +42,10 @@ test.describe.serial('일정 관리 CRUD E2E', () => {
   });
 
   test('일정 조회 - Read', async ({ page }) => {
+    const date = getCurrentDate(10);
     // 먼저 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('조회 테스트 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-10');
+    await page.getByRole('textbox', { name: '날짜' }).fill(date);
     await page.getByRole('textbox', { name: '시작 시간' }).fill('10:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('11:00');
     await page.getByTestId('event-submit-button').click();
@@ -52,20 +56,21 @@ test.describe.serial('일정 관리 CRUD E2E', () => {
     const eventBox = eventList
       .locator('div')
       .filter({ hasText: '조회 테스트 일정' })
-      .filter({ hasText: '2025-11-10' })
+      .filter({ hasText: date })
       .first();
 
     // 일정 상세 정보 확인
     await expect(eventBox.getByText('조회 테스트 일정')).toBeVisible();
-    await expect(eventBox.getByText('2025-11-10')).toBeVisible();
+    await expect(eventBox.getByText(date)).toBeVisible();
     await expect(eventBox.getByText('10:00')).toBeVisible();
     await expect(eventBox.getByText('11:00')).toBeVisible();
   });
 
   test('일정 수정 - Update', async ({ page }) => {
+    const date = getCurrentDate(15);
     // 먼저 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('수정 전 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill(date);
     await page.getByRole('textbox', { name: '시작 시간' }).fill('14:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('15:00');
     await page.getByTestId('event-submit-button').click();
@@ -76,7 +81,7 @@ test.describe.serial('일정 관리 CRUD E2E', () => {
     const eventBox = eventList
       .locator('div')
       .filter({ hasText: '수정 전 일정' })
-      .filter({ hasText: '2025-11-15' })
+      .filter({ hasText: date })
       .first();
 
     await eventBox.getByRole('button', { name: 'Edit event' }).click();
@@ -98,9 +103,10 @@ test.describe.serial('일정 관리 CRUD E2E', () => {
   });
 
   test('일정 삭제 - Delete', async ({ page }) => {
+    const date = getCurrentDate(20);
     // 먼저 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('삭제 테스트 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-20');
+    await page.getByRole('textbox', { name: '날짜' }).fill(date);
     await page.getByRole('textbox', { name: '시작 시간' }).fill('16:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('17:00');
     await page.getByTestId('event-submit-button').click();
@@ -111,7 +117,7 @@ test.describe.serial('일정 관리 CRUD E2E', () => {
     const eventBox = eventList
       .locator('div')
       .filter({ hasText: '삭제 테스트 일정' })
-      .filter({ hasText: '2025-11-20' })
+      .filter({ hasText: date })
       .first();
 
     await eventBox.getByRole('button', { name: 'Delete event' }).click();

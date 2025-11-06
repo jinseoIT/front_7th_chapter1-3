@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url';
 
 import { test, expect } from '@playwright/test';
 
+import { getCurrentDate } from '../../src/utils/dateUtils';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const e2ePath = join(__dirname, '../../src/__mocks__/response/e2e.json');
@@ -64,9 +66,10 @@ test.describe.serial('알림 시스템 E2E', () => {
   });
 
   test('알림 설정된 일정이 시각적으로 표시됨', async ({ page }) => {
+    const date = getCurrentDate(15);
     // 알림이 설정된 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('알림 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill(date);
     await page.getByRole('textbox', { name: '시작 시간' }).fill('10:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('11:00');
 
@@ -82,7 +85,7 @@ test.describe.serial('알림 시스템 E2E', () => {
     const eventBox = eventList
       .locator('div')
       .filter({ hasText: '알림 일정' })
-      .filter({ hasText: '2025-11-15' })
+      .filter({ hasText: date })
       .first();
 
     // 알림 아이콘이 있는지 확인 (Notifications 아이콘 - MUI 아이콘은 svg로 렌더링됨)
@@ -144,9 +147,10 @@ test.describe.serial('알림 시스템 E2E', () => {
   });
 
   test('알림이 없는 일정은 알림 아이콘이 표시되지 않음', async ({ page }) => {
+    const date = getCurrentDate(15);
     // 알림이 없는 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('알림 없는 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill(date);
     await page.getByRole('textbox', { name: '시작 시간' }).fill('10:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('11:00');
     // 알림 설정 안 함 (기본값)
@@ -159,7 +163,7 @@ test.describe.serial('알림 시스템 E2E', () => {
     const eventBox = eventList
       .locator('div')
       .filter({ hasText: '알림 없는 일정' })
-      .filter({ hasText: '2025-11-15' })
+      .filter({ hasText: date })
       .first();
 
     await expect(eventBox).toBeVisible();

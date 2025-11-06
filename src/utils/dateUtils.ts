@@ -108,3 +108,24 @@ export function formatDate(currentDate: Date, day?: number) {
     fillZero(day ?? currentDate.getDate()),
   ].join('-');
 }
+
+/**
+ * 현재 날짜를 기준으로 날짜 문자열 생성 (YYYY-MM-DD 형식)
+ * @param day - 일자 (1-31)
+ * @returns YYYY-MM-DD 형식의 날짜 문자열
+ */
+export function getCurrentDate(day: number): string {
+  return formatDate(new Date(), day);
+}
+
+/**
+ * 현재 날짜를 기준으로 미래 날짜 생성 (몇 달 후)
+ * @param day - 일자 (1-31)
+ * @param monthsLater - 몇 달 후 (기본값: 1)
+ * @returns YYYY-MM-DD 형식의 날짜 문자열
+ */
+export function getFutureDate(day: number, monthsLater: number = 1): string {
+  const now = new Date();
+  const futureDate = new Date(now.getFullYear(), now.getMonth() + monthsLater, 1);
+  return formatDate(futureDate, day);
+}

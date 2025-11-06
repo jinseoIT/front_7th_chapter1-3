@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url';
 
 import { test, expect } from '@playwright/test';
 
+import { getCurrentDate } from '../../src/utils/dateUtils';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const e2ePath = join(__dirname, '../../src/__mocks__/response/e2e.json');
@@ -17,9 +19,11 @@ test.describe.serial('드래그 앤 드롭 (DND-kit) E2E', () => {
   });
 
   test('일반 일정 드래그 앤 드롭 - 날짜 변경', async ({ page }) => {
+    const startDate = getCurrentDate(15);
+    const targetDate = getCurrentDate(16);
     // 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('드래그 테스트 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill(startDate);
     await page.getByRole('textbox', { name: '시작 시간' }).fill('10:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('11:00');
     await page.getByTestId('event-submit-button').click();
@@ -42,7 +46,7 @@ test.describe.serial('드래그 앤 드롭 (DND-kit) E2E', () => {
     const movedEvent = eventList
       .locator('div')
       .filter({ hasText: '드래그 테스트 일정' })
-      .filter({ hasText: '2025-11-16' })
+      .filter({ hasText: targetDate })
       .first();
     await expect(movedEvent).toBeVisible({ timeout: 3000 });
 
@@ -51,17 +55,20 @@ test.describe.serial('드래그 앤 드롭 (DND-kit) E2E', () => {
       eventList
         .locator('div')
         .filter({ hasText: '드래그 테스트 일정' })
-        .filter({ hasText: '2025-11-15' })
+        .filter({ hasText: startDate })
     ).toHaveCount(0, { timeout: 3000 });
   });
+
   /*
    NOTE: 페어 프로그래밍
+
    드라이버: 고다솜, 양진성
    네비게이터: 정나리, 이정민 */
   test('빈 영역으로 드래그 시 원래 위치로 복귀', async ({ page }) => {
+    const startDate = getCurrentDate(15);
     // 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('테스트 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill(startDate);
     await page.getByRole('textbox', { name: '시작 시간' }).fill('10:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('11:00');
     await page.getByTestId('event-submit-button').click();
