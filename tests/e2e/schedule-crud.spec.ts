@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const e2ePath = join(__dirname, '../../src/__mocks__/response/e2e.json');
 
-test.describe('일정 관리 CRUD E2E', () => {
+test.describe.serial('일정 관리 CRUD E2E', () => {
   test.beforeEach(async ({ page }) => {
     // e2e.json을 빈 배열로 초기화
     fs.writeFileSync(e2ePath, JSON.stringify({ events: [] }, null, 2));

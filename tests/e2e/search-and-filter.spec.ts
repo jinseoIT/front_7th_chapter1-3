@@ -1,7 +1,18 @@
+import fs from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
 import { test, expect } from '@playwright/test';
 
-test.describe('검색 및 필터링 E2E', () => {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const e2ePath = join(__dirname, '../../src/__mocks__/response/e2e.json');
+
+test.describe.serial('검색 및 필터링 E2E', () => {
   test.beforeEach(async ({ page }) => {
+    // e2e.json을 빈 배열로 초기화
+    fs.writeFileSync(e2ePath, JSON.stringify({ events: [] }, null, 2));
+
     await page.goto('/');
     await page.waitForLoadState('networkidle');
   });
@@ -9,9 +20,9 @@ test.describe('검색 및 필터링 E2E', () => {
   test('제목으로 일정 검색', async ({ page }) => {
     // 여러 일정 생성
     const events = [
-      { title: '팀 미팅', date: '2025-01-15', startTime: '10:00', endTime: '11:00' },
-      { title: '코드 리뷰', date: '2025-01-16', startTime: '14:00', endTime: '15:00' },
-      { title: '프로젝트 회의', date: '2025-01-17', startTime: '16:00', endTime: '17:00' },
+      { title: '팀 미팅', date: '2025-11-15', startTime: '10:00', endTime: '11:00' },
+      { title: '코드 리뷰', date: '2025-11-16', startTime: '14:00', endTime: '15:00' },
+      { title: '프로젝트 회의', date: '2025-11-17', startTime: '16:00', endTime: '17:00' },
     ];
 
     for (const event of events) {
@@ -37,7 +48,7 @@ test.describe('검색 및 필터링 E2E', () => {
   test('설명으로 일정 검색', async ({ page }) => {
     // 설명이 있는 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('회의 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-01-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
     await page.getByRole('textbox', { name: '시작 시간' }).fill('10:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('11:00');
     await page.getByRole('textbox', { name: '설명' }).fill('프로젝트 진행 상황 논의');
@@ -56,7 +67,7 @@ test.describe('검색 및 필터링 E2E', () => {
   test('위치로 일정 검색', async ({ page }) => {
     // 위치가 있는 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('오프라인 미팅');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-01-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
     await page.getByRole('textbox', { name: '시작 시간' }).fill('10:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('11:00');
     await page.getByRole('textbox', { name: '위치' }).fill('서울 강남구');
@@ -75,7 +86,7 @@ test.describe('검색 및 필터링 E2E', () => {
   test('검색 결과가 없을 때 메시지 표시', async ({ page }) => {
     // 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('기존 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-01-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
     await page.getByRole('textbox', { name: '시작 시간' }).fill('10:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('11:00');
     await page.getByTestId('event-submit-button').click();
@@ -92,8 +103,8 @@ test.describe('검색 및 필터링 E2E', () => {
   test('검색어 삭제 시 모든 일정 표시', async ({ page }) => {
     // 여러 일정 생성
     const events = [
-      { title: '첫 번째 일정', date: '2025-01-15', startTime: '10:00', endTime: '11:00' },
-      { title: '두 번째 일정', date: '2025-01-16', startTime: '14:00', endTime: '15:00' },
+      { title: '첫 번째 일정', date: '2025-11-15', startTime: '10:00', endTime: '11:00' },
+      { title: '두 번째 일정', date: '2025-11-16', startTime: '14:00', endTime: '15:00' },
     ];
 
     for (const event of events) {
@@ -155,13 +166,15 @@ test.describe('검색 및 필터링 E2E', () => {
     // 현재 주의 일정만 표시되는지 확인 (뷰 필터링 확인)
     const eventList = page.getByTestId('event-list');
     // 주간 뷰에서는 현재 주의 일정만 표시되어야 함
-    // (실제 구현에 따라 다를 수 있음)
+    await expect(eventList.getByText('이번 주 일정')).toBeVisible({ timeout: 3000 });
+    // 다음 달 일정은 현재 주간 뷰에 표시되지 않아야 함
+    await expect(eventList.getByText('다음 달 일정')).not.toBeVisible();
   });
 
   test('대소문자 구분 없이 검색', async ({ page }) => {
     // 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('대소문자 테스트');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-01-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
     await page.getByRole('textbox', { name: '시작 시간' }).fill('10:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('11:00');
     await page.getByTestId('event-submit-button').click();
