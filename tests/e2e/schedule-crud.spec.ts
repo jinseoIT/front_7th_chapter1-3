@@ -29,8 +29,9 @@ test.describe.serial('일정 관리 CRUD E2E', () => {
     await page.getByRole('option', { name: '개인-option' }).click();
     await page.getByTestId('event-submit-button').click();
 
-    // 성공 메시지 확인
-    await expect(page.getByText('일정이 추가되었습니다')).toBeVisible({ timeout: 3000 });
+    // 스낵바 성공 메시지 확인
+    const successSnackbar = page.getByText('일정이 추가되었습니다');
+    await expect(successSnackbar).toBeVisible({ timeout: 3000 });
 
     // 일정이 이벤트 리스트에 추가되었는지 확인
     const eventList = page.getByTestId('event-list');
@@ -85,8 +86,9 @@ test.describe.serial('일정 관리 CRUD E2E', () => {
     await page.getByRole('textbox', { name: '설명' }).fill('수정된 설명');
     await page.getByTestId('event-submit-button').click();
 
-    // 성공 메시지 확인
-    await expect(page.getByText('일정이 수정되었습니다')).toBeVisible({ timeout: 3000 });
+    // 스낵바 성공 메시지 확인
+    const successSnackbar = page.getByText('일정이 수정되었습니다');
+    await expect(successSnackbar).toBeVisible({ timeout: 3000 });
 
     // 수정된 일정 확인
     await expect(eventList.getByText('수정 후 일정')).toBeVisible({ timeout: 3000 });
@@ -114,9 +116,9 @@ test.describe.serial('일정 관리 CRUD E2E', () => {
 
     await eventBox.getByRole('button', { name: 'Delete event' }).click();
 
-    // 삭제 확인 대화상자 확인 (일반 일정은 다이얼로그 없이 바로 삭제될 수도 있음)
-    // 삭제 성공 메시지 확인
-    await expect(page.getByText('일정이 삭제되었습니다')).toBeVisible({ timeout: 3000 });
+    // 스낵바 삭제 성공 메시지 확인
+    const successSnackbar = page.getByText('일정이 삭제되었습니다');
+    await expect(successSnackbar).toBeVisible({ timeout: 3000 });
 
     // 일정이 리스트에서 제거되었는지 확인
     await expect(eventList.getByText('삭제 테스트 일정')).toHaveCount(0, { timeout: 3000 });
