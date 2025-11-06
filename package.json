@@ -22,7 +22,8 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "chromatic": "dotenv -e .env.local -- npx chromatic --project-token=$CHROMATIC_PROJECT_TOKEN",
-    "chromatic:force": "dotenv -e .env.local -- npx chromatic --project-token=$CHROMATIC_PROJECT_TOKEN --force-rebuild"
+    "chromatic:force": "dotenv -e .env.local -- npx chromatic --project-token=$CHROMATIC_PROJECT_TOKEN --force-rebuild",
+    "codegen": "npx playwright codegen http://localhost:5173"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
