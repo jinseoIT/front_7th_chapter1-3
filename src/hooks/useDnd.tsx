@@ -28,6 +28,10 @@ export function useDnd({ events, saveEvent, setEvents, onOverlap }: UseDndProps)
 
   const handleDragStart = (event: DragStartEvent) => {
     const draggedEvent = events.find((e) => e.id === String(event.active.id));
+    // 반복 일정은 드래그 불가
+    if (draggedEvent && draggedEvent.repeat.type !== 'none') {
+      return;
+    }
     setActiveEvent(draggedEvent || null);
   };
   const handleDragOver = (event: DragOverEvent) => {

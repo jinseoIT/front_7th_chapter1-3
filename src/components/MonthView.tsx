@@ -94,6 +94,7 @@ const MonthView = ({
                               <DroppabelBox
                                 key={event.id}
                                 eventId={event.id}
+                                disabled={isRepeating}
                                 sx={{
                                   p: 0.5,
                                   my: 0.5,
