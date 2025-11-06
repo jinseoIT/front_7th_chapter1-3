@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url';
 
 import { test, expect } from '@playwright/test';
 
+import { getCurrentDate } from '../../src/utils/dateUtils';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const e2ePath = join(__dirname, '../../src/__mocks__/response/e2e.json');
@@ -18,9 +20,10 @@ test.describe.serial('일정 겹침 처리 E2E', () => {
   });
 
   test('일정 생성 시 겹침 감지 및 다이얼로그 표시', async ({ page }) => {
+    const date = getCurrentDate(15);
     // 첫 번째 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('기존 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill(date);
     await page.getByRole('textbox', { name: '시작 시간' }).fill('10:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('11:00');
     await page.getByTestId('event-submit-button').click();
@@ -28,7 +31,7 @@ test.describe.serial('일정 겹침 처리 E2E', () => {
 
     // 겹치는 일정 생성 시도
     await page.getByRole('textbox', { name: '제목' }).fill('겹치는 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill(date);
     await page.getByRole('textbox', { name: '시작 시간' }).fill('10:30'); // 겹침
     await page.getByRole('textbox', { name: '종료 시간' }).fill('11:30'); // 겹침
     await page.getByTestId('event-submit-button').click();
@@ -48,9 +51,10 @@ test.describe.serial('일정 겹침 처리 E2E', () => {
   });
 
   test('일정 수정 시 겹침 감지', async ({ page }) => {
+    const date = getCurrentDate(15);
     // 첫 번째 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('원본 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill(date);
     await page.getByRole('textbox', { name: '시작 시간' }).fill('09:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('10:00');
     await page.getByTestId('event-submit-button').click();
@@ -58,7 +62,7 @@ test.describe.serial('일정 겹침 처리 E2E', () => {
 
     // 두 번째 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('다른 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill(date);
     await page.getByRole('textbox', { name: '시작 시간' }).fill('11:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('12:00');
     await page.getByTestId('event-submit-button').click();
@@ -69,7 +73,7 @@ test.describe.serial('일정 겹침 처리 E2E', () => {
     const eventBox = eventList
       .locator('div')
       .filter({ hasText: '다른 일정' })
-      .filter({ hasText: '2025-11-15' })
+      .filter({ hasText: date })
       .first();
 
     await eventBox.getByRole('button', { name: 'Edit event' }).click();
@@ -86,9 +90,10 @@ test.describe.serial('일정 겹침 처리 E2E', () => {
   });
 
   test('겹침 다이얼로그에서 계속 진행 버튼 클릭 시 강제 생성', async ({ page }) => {
+    const date = getCurrentDate(15);
     // 기존 일정 생성
     await page.getByRole('textbox', { name: '제목' }).fill('기존 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill(date);
     await page.getByRole('textbox', { name: '시작 시간' }).fill('10:00');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('11:00');
     await page.getByTestId('event-submit-button').click();
@@ -96,7 +101,7 @@ test.describe.serial('일정 겹침 처리 E2E', () => {
 
     // 겹치는 일정 생성 시도
     await page.getByRole('textbox', { name: '제목' }).fill('강제 생성 일정');
-    await page.getByRole('textbox', { name: '날짜' }).fill('2025-11-15');
+    await page.getByRole('textbox', { name: '날짜' }).fill(date);
     await page.getByRole('textbox', { name: '시작 시간' }).fill('10:30');
     await page.getByRole('textbox', { name: '종료 시간' }).fill('11:30');
     await page.getByTestId('event-submit-button').click();

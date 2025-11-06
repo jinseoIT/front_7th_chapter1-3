@@ -7,11 +7,13 @@ type Props = {
   eventId: string;
   children: React.ReactNode;
   sx?: SxProps<Theme>;
+  disabled?: boolean;
 };
 
-const DroppabelBox = ({ eventId, sx, children }: Props) => {
+const DroppabelBox = ({ eventId, sx, children, disabled = false }: Props) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: eventId,
+    disabled,
   });
   return (
     <Box
@@ -19,11 +21,11 @@ const DroppabelBox = ({ eventId, sx, children }: Props) => {
       sx={{
         ...sx,
         opacity: isDragging ? 0 : 1,
-        cursor: isDragging ? 'grabbing' : 'grab',
+        cursor: disabled ? 'not-allowed' : isDragging ? 'grabbing' : 'grab',
       }}
       ref={setNodeRef}
-      {...attributes}
-      {...listeners}
+      {...(disabled ? {} : attributes)}
+      {...(disabled ? {} : listeners)}
     >
       {children}
     </Box>

@@ -73,6 +73,7 @@ const WeekView = ({ currentDate, filteredEvents, notifiedEvents, overId, onClick
                         <DroppabelBox
                           key={event.id}
                           eventId={event.id}
+                          disabled={isRepeating}
                           sx={{
                             ...eventBoxStyles.common,
                             ...(isNotified ? eventBoxStyles.notified : eventBoxStyles.normal),
