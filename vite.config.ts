@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react-swc';
 import { defineConfig } from 'vite';
 import { defineConfig as defineTestConfig, mergeConfig } from 'vitest/config';
 
+// More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default mergeConfig(
   defineConfig({
     plugins: [react()],
@@ -23,6 +24,8 @@ export default mergeConfig(
         reportsDirectory: './.coverage',
         reporter: ['lcov', 'json', 'json-summary'],
       },
+      include: ['src/__tests__/**/*.spec.{ts,tsx}'],
+      exclude: ['**/e2e/**'],
     },
   })
 );

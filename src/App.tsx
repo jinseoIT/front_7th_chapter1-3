@@ -1,3 +1,4 @@
+import { DndContext, DragOverlay } from '@dnd-kit/core';
 import {
   ChevronLeft,
   ChevronRight,
@@ -25,12 +26,6 @@ import {
   MenuItem,
   Select,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Tooltip,
   Typography,
@@ -38,28 +33,24 @@ import {
 import { useSnackbar } from 'notistack';
 import { useState } from 'react';
 
+import MonthView from './components/MonthView.tsx';
 import RecurringEventDialog from './components/RecurringEventDialog.tsx';
+import WeekView from './components/WeekView.tsx';
+import { eventBoxStyles } from './constants/eventBoxStyles.ts';
 import { useCalendarView } from './hooks/useCalendarView.ts';
+import { useDnd } from './hooks/useDnd.tsx';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
+import { useFormDate } from './hooks/useFormDate.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useRecurringEventOperations } from './hooks/useRecurringEventOperations.ts';
 import { useSearch } from './hooks/useSearch.ts';
 import { Event, EventForm, RepeatType } from './types.ts';
-import {
-  formatDate,
-  formatMonth,
-  formatWeek,
-  getEventsForDay,
-  getWeekDates,
-  getWeeksAtMonth,
-} from './utils/dateUtils.ts';
 import { findOverlappingEvents } from './utils/eventOverlap.ts';
+import { getRepeatTypeLabel } from './utils/getRepeatTypeLabel.ts';
 import { getTimeErrorMessage } from './utils/timeValidation.ts';
 
 const categories = ['업무', '개인', '가족', '기타'];
-
-const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
 const notificationOptions = [
   { value: 1, label: '1분 전' },
@@ -68,43 +59,6 @@ const notificationOptions = [
   { value: 120, label: '2시간 전' },
   { value: 1440, label: '1일 전' },
 ];
-
-// 스타일 상수
-const eventBoxStyles = {
-  notified: {
-    backgroundColor: '#ffebee',
-    fontWeight: 'bold',
-    color: '#d32f2f',
-  },
-  normal: {
-    backgroundColor: '#f5f5f5',
-    fontWeight: 'normal',
-    color: 'inherit',
-  },
-  common: {
-    p: 0.5,
-    my: 0.5,
-    borderRadius: 1,
-    minHeight: '18px',
-    width: '100%',
-    overflow: 'hidden',
-  },
-};
-
-const getRepeatTypeLabel = (type: RepeatType): string => {
-  switch (type) {
-    case 'daily':
-      return '일';
-    case 'weekly':
-      return '주';
-    case 'monthly':
-      return '월';
-    case 'yearly':
-      return '년';
-    default:
-      return '';
-  }
-};
 
 function App() {
   const {
@@ -140,10 +94,8 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent, createRepeatEvent, fetchEvents } = useEventOperations(
-    Boolean(editingEvent),
-    () => setEditingEvent(null)
-  );
+  const { events, setEvents, saveEvent, deleteEvent, createRepeatEvent, fetchEvents } =
+    useEventOperations(Boolean(editingEvent), () => setEditingEvent(null));
 
   const { handleRecurringEdit, handleRecurringDelete } = useRecurringEventOperations(
     events,
@@ -290,192 +242,25 @@ function App() {
     resetForm();
   };
 
-  const renderWeekView = () => {
-    const weekDates = getWeekDates(currentDate);
-    return (
-      <Stack data-testid="week-view" spacing={4} sx={{ width: '100%' }}>
-        <Typography variant="h5">{formatWeek(currentDate)}</Typography>
-        <TableContainer>
-          <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
-            <TableHead>
-              <TableRow>
-                {weekDays.map((day) => (
-                  <TableCell key={day} sx={{ width: '14.28%', padding: 1, textAlign: 'center' }}>
-                    {day}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              <TableRow>
-                {weekDates.map((date) => (
-                  <TableCell
-                    key={date.toISOString()}
-                    sx={{
-                      height: '120px',
-                      verticalAlign: 'top',
-                      width: '14.28%',
-                      padding: 1,
-                      border: '1px solid #e0e0e0',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Typography variant="body2" fontWeight="bold">
-                      {date.getDate()}
-                    </Typography>
-                    {filteredEvents
-                      .filter(
-                        (event) => new Date(event.date).toDateString() === date.toDateString()
-                      )
-                      .map((event) => {
-                        const isNotified = notifiedEvents.includes(event.id);
-                        const isRepeating = event.repeat.type !== 'none';
+  const {
+    sensors,
+    activeEvent,
+    overId,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDragCancel,
+  } = useDnd({
+    events,
+    saveEvent,
+    setEvents,
+    onOverlap: (overlapping) => {
+      setOverlappingEvents(overlapping);
+      setIsOverlapDialogOpen(true);
+    },
+  });
 
-                        return (
-                          <Box
-                            key={event.id}
-                            sx={{
-                              ...eventBoxStyles.common,
-                              ...(isNotified ? eventBoxStyles.notified : eventBoxStyles.normal),
-                            }}
-                          >
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              {isNotified && <Notifications fontSize="small" />}
-                              {/* ! TEST CASE */}
-                              {isRepeating && (
-                                <Tooltip
-                                  title={`${event.repeat.interval}${getRepeatTypeLabel(event.repeat.type)}마다 반복${
-                                    event.repeat.endDate ? ` (종료: ${event.repeat.endDate})` : ''
-                                  }`}
-                                >
-                                  <Repeat fontSize="small" />
-                                </Tooltip>
-                              )}
-                              <Typography
-                                variant="caption"
-                                noWrap
-                                sx={{ fontSize: '0.75rem', lineHeight: 1.2 }}
-                              >
-                                {event.title}
-                              </Typography>
-                            </Stack>
-                          </Box>
-                        );
-                      })}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Stack>
-    );
-  };
-
-  const renderMonthView = () => {
-    const weeks = getWeeksAtMonth(currentDate);
-
-    return (
-      <Stack data-testid="month-view" spacing={4} sx={{ width: '100%' }}>
-        <Typography variant="h5">{formatMonth(currentDate)}</Typography>
-        <TableContainer>
-          <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
-            <TableHead>
-              <TableRow>
-                {weekDays.map((day) => (
-                  <TableCell key={day} sx={{ width: '14.28%', padding: 1, textAlign: 'center' }}>
-                    {day}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {weeks.map((week, weekIndex) => (
-                <TableRow key={weekIndex}>
-                  {week.map((day, dayIndex) => {
-                    const dateString = day ? formatDate(currentDate, day) : '';
-                    const holiday = holidays[dateString];
-
-                    return (
-                      <TableCell
-                        key={dayIndex}
-                        sx={{
-                          height: '120px',
-                          verticalAlign: 'top',
-                          width: '14.28%',
-                          padding: 1,
-                          border: '1px solid #e0e0e0',
-                          overflow: 'hidden',
-                          position: 'relative',
-                        }}
-                      >
-                        {day && (
-                          <>
-                            <Typography variant="body2" fontWeight="bold">
-                              {day}
-                            </Typography>
-                            {holiday && (
-                              <Typography variant="body2" color="error">
-                                {holiday}
-                              </Typography>
-                            )}
-                            {getEventsForDay(filteredEvents, day).map((event) => {
-                              const isNotified = notifiedEvents.includes(event.id);
-                              const isRepeating = event.repeat.type !== 'none';
-
-                              return (
-                                <Box
-                                  key={event.id}
-                                  sx={{
-                                    p: 0.5,
-                                    my: 0.5,
-                                    backgroundColor: isNotified ? '#ffebee' : '#f5f5f5',
-                                    borderRadius: 1,
-                                    fontWeight: isNotified ? 'bold' : 'normal',
-                                    color: isNotified ? '#d32f2f' : 'inherit',
-                                    minHeight: '18px',
-                                    width: '100%',
-                                    overflow: 'hidden',
-                                  }}
-                                >
-                                  <Stack direction="row" spacing={1} alignItems="center">
-                                    {isNotified && <Notifications fontSize="small" />}
-                                    {/* ! TEST CASE */}
-                                    {isRepeating && (
-                                      <Tooltip
-                                        title={`${event.repeat.interval}${getRepeatTypeLabel(event.repeat.type)}마다 반복${
-                                          event.repeat.endDate
-                                            ? ` (종료: ${event.repeat.endDate})`
-                                            : ''
-                                        }`}
-                                      >
-                                        <Repeat fontSize="small" />
-                                      </Tooltip>
-                                    )}
-                                    <Typography
-                                      variant="caption"
-                                      noWrap
-                                      sx={{ fontSize: '0.75rem', lineHeight: 1.2 }}
-                                    >
-                                      {event.title}
-                                    </Typography>
-                                  </Stack>
-                                </Box>
-                              );
-                            })}
-                          </>
-                        )}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Stack>
-    );
-  };
+  const { handleSelectDate } = useFormDate(setDate);
 
   return (
     <Box sx={{ width: '100%', height: '100vh', margin: 'auto', p: 5 }}>
@@ -671,34 +456,95 @@ function App() {
             {editingEvent ? '일정 수정' : '일정 추가'}
           </Button>
         </Stack>
-
         <Stack flex={1} spacing={5}>
-          <Typography variant="h4">일정 보기</Typography>
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragCancel={handleDragCancel}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <Typography variant="h4">일정 보기</Typography>
 
-          <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
-            <IconButton aria-label="Previous" onClick={() => navigate('prev')}>
-              <ChevronLeft />
-            </IconButton>
-            <Select
-              size="small"
-              aria-label="뷰 타입 선택"
-              value={view}
-              onChange={(e) => setView(e.target.value as 'week' | 'month')}
-            >
-              <MenuItem value="week" aria-label="week-option">
-                Week
-              </MenuItem>
-              <MenuItem value="month" aria-label="month-option">
-                Month
-              </MenuItem>
-            </Select>
-            <IconButton aria-label="Next" onClick={() => navigate('next')}>
-              <ChevronRight />
-            </IconButton>
-          </Stack>
+            <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
+              <IconButton aria-label="Previous" onClick={() => navigate('prev')}>
+                <ChevronLeft />
+              </IconButton>
+              <Select
+                size="small"
+                aria-label="뷰 타입 선택"
+                value={view}
+                onChange={(e) => setView(e.target.value as 'week' | 'month')}
+              >
+                <MenuItem value="week" aria-label="week-option">
+                  Week
+                </MenuItem>
+                <MenuItem value="month" aria-label="month-option">
+                  Month
+                </MenuItem>
+              </Select>
+              <IconButton aria-label="Next" onClick={() => navigate('next')}>
+                <ChevronRight />
+              </IconButton>
+            </Stack>
 
-          {view === 'week' && renderWeekView()}
-          {view === 'month' && renderMonthView()}
+            {view === 'week' && (
+              <WeekView
+                currentDate={currentDate}
+                filteredEvents={filteredEvents}
+                notifiedEvents={notifiedEvents}
+                overId={overId}
+                onClickCell={handleSelectDate}
+              />
+            )}
+            {view === 'month' && (
+              <MonthView
+                currentDate={currentDate}
+                filteredEvents={filteredEvents}
+                notifiedEvents={notifiedEvents}
+                holidays={holidays}
+                overId={overId}
+                onClickCell={handleSelectDate}
+              />
+            )}
+            <DragOverlay dropAnimation={null}>
+              {activeEvent ? (
+                <Box
+                  sx={{
+                    ...eventBoxStyles.common,
+                    ...(notifiedEvents.includes(activeEvent.id)
+                      ? eventBoxStyles.notified
+                      : eventBoxStyles.normal),
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+                    cursor: 'grabbing', // 드래그 중 커서
+                    opacity: 1,
+                  }}
+                >
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    {notifiedEvents.includes(activeEvent.id) && <Notifications fontSize="small" />}
+                    {activeEvent.repeat.type !== 'none' && (
+                      <Tooltip
+                        title={`${activeEvent.repeat.interval}${getRepeatTypeLabel(
+                          activeEvent.repeat.type
+                        )}마다 반복${
+                          activeEvent.repeat.endDate ? ` (종료: ${activeEvent.repeat.endDate})` : ''
+                        }`}
+                      >
+                        <Repeat fontSize="small" />
+                      </Tooltip>
+                    )}
+                    <Typography
+                      variant="caption"
+                      noWrap
+                      sx={{ fontSize: '0.75rem', lineHeight: 1.2 }}
+                    >
+                      {activeEvent.title}
+                    </Typography>
+                  </Stack>
+                </Box>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         </Stack>
 
         <Stack
@@ -728,7 +574,9 @@ function App() {
                       {notifiedEvents.includes(event.id) && <Notifications color="error" />}
                       {event.repeat.type !== 'none' && (
                         <Tooltip
-                          title={`${event.repeat.interval}${getRepeatTypeLabel(event.repeat.type)}마다 반복${
+                          title={`${event.repeat.interval}${getRepeatTypeLabel(
+                            event.repeat.type
+                          )}마다 반복${
                             event.repeat.endDate ? ` (종료: ${event.repeat.endDate})` : ''
                           }`}
                         >
