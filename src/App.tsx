@@ -259,7 +259,7 @@ function App() {
       setIsOverlapDialogOpen(true);
     },
   });
-  console.log('envets ::', events);
+
   const { handleSelectDate } = useFormDate(setDate);
 
   return (
